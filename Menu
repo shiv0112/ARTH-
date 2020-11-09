@@ -1,0 +1,186 @@
+import os
+import getpass
+p="shivansh"
+d=getpass.getpass("Input the password ")
+if(d!=p):
+    os.system("Wrong Password exiting...")
+    exit()
+os.system("tput setaf 3")
+print("\t\t\t\tWelcome welcome welcome")
+os.system("tput setaf 5")
+print("\t\t\t\tWelcome to my menu program")
+os.system("tput setaf 7")
+m="""
+Press 1: To create a partition
+Press 2: To format the disk
+Press 3: To mount the disk
+Press 4: To configure yum
+Press 5: To configure apache web server
+Press 6: To create a LVM partition
+Press 7: To create a namenode on hadoop
+Press 8: To create a datanode on hadoop
+Press 9: To create a client on hadoop
+Press 10: To check the Cluster Information
+Press 11: 
+"""
+print(m)
+ch=int(input("Enter choice "))
+a=input("Where do u want to run above choices? (Local/Remote)")
+if(a=="Remote"):
+     q=input("Enter the target's IP")
+     os.system("scp menu.py "+q+":/root")
+     os.system("ssh "+q)
+     os.system("echo 'local' | python3 menu.py")
+     os.system("exit")
+     exit() 
+if (ch==1):
+     d=input("Enter disk name")
+     s=input("Input partition size in GB")
+     i="(echo 'n' ; echo 'p'; echo -ne '\n'; echo -ne '\n'; echo '+"+s+"G'; echo 'w')| fdisk /dev/"+d
+     os.system(i)
+     os.system("udevadm settle")
+     os.system("lsblk")
+elif (ch==2):
+     d=input("Enter disk name")
+     os.system("mkfs.ext4 /dev/"+d)
+elif (ch==3):
+     f=input("Enter drive name")
+     os.system("mkdir /"+f)
+     os.system("lsblk")
+     p=input("Enter a partition name")
+     os.system("mount /dev/"+p+" "+"/"+f)
+     os.system("cd /"+f)
+elif (ch==4):
+     os.system("cd /etc/yum.repos.d")
+     f=open("/etc/yum.repos.d/yumc.repo", "w")	
+     f.write("""[dvd1]
+baseurl=/run/media/root/RHEL-8-0-0-BaseOS-x86_64/AppStream
+gpgcheck=0
+
+[dvd2]
+baseurl=/run/media/root/RHEL-8-0-0-BaseOS-x86_64/BaseOS
+pgcheck=0""")
+     f.close()
+     os.system("yum -y install https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm")
+     os.system("yum repolist")
+elif (ch==5):
+     os.system("dnf install httpd -y")
+     os.system("systemctl enable httpd")
+     os.system("systemctl start httpd")
+elif (ch==6):
+     d1=input("Enter first disk name ")
+     d2=input("Enter second disk name ")
+     v=input("Enter the name of the volume group ")
+     n=input("Enter the name of the LVM ")
+     s=input("Enter the size of the LVM ")
+     dr=input("Input the LVM mountpoint name ")
+     #pv creation
+     os.system("pvcreate /dev/"+d1)
+     os.system("pvcreate /dev/"+d2)
+     #vg creation
+     os.system("vgcreate "+v+" /dev/"+d1+" /dev/"+d2)
+     os.system("vgdisplay "+v)
+     #lvm creation
+     os.system("lvcreate --size +"+s+"G --name "+n+" "+v)
+     #formatting
+     os.system("mkfs.ext4 /dev/"+v+"/"+n)
+     #mounting
+     os.system("mkdir /"+dr)
+     os.system("mount /dev/"+v+"/"+n+" "+"/"+dr)
+     os.system("cd /"+dr)
+elif (ch==7):
+     k=input("Enter your enp0s3 IPv4 ")	
+     m=open("/etc/hadoop/hdfs-site.xml", "w")
+     m.write("""<?xml version="1.0"?>
+<?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
+
+<!-- Put site-specific property overrides in this file. -->
+
+<configuration>
+<property>
+<name>dfs.name.dir</name>
+<value>/name</value>
+</property>
+</configuration>""")
+     m.close()
+     os.system("mkdir /name")
+     m=open("/etc/hadoop/core-site.xml", "w")
+     m.write("""<?xml version="1.0"?>
+<?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
+
+<!-- Put site-specific property overrides in this file. -->
+
+<configuration>
+<property>
+<name>fs.default.name</name>
+<value>hdfs://"""+k+"""</value>
+</property>
+</configuration>""")
+     m.close()
+     os.system("systemctl stop firewalld")
+     os.system("echo 'Y' | hadoop namenode -format")
+     os.system("hadoop-daemon.sh start namenode")
+     os.system("jps")
+     os.system("hadoop dfsadmin -report")  
+elif (ch==8):
+     k=input("Enter masternode enp0s3 IPv4 ")
+     m=open("/etc/hadoop/hdfs-site.xml", "w")
+     m.write("""<?xml version="1.0"?>
+<?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
+
+<!-- Put site-specific property overrides in this file. -->
+
+<configuration>
+<property>
+<name>dfs.data.dir</name>
+<value>/data</value>
+</property>
+</configuration>""")
+     m.close()
+     os.system("mkdir /name")
+     m=open("/etc/hadoop/core-site.xml", "w")
+     m.write("""<?xml version="1.0"?>
+<?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
+
+<!-- Put site-specific property overrides in this file. -->
+
+<configuration>
+<property>
+<name>fs.default.name</name>
+<value>hdfs://"""+k+"""</value>
+</property>
+</configuration>""")
+     m.close()
+     os.system("systemctl stop firewalld")
+     os.system("hadoop-daemon.sh start datanode")
+     os.system("jps")
+     os.system("hadoop dfsadmin -report")
+elif(ch==9):
+     k=input("Enter master node enp0s3 IPv4 ")
+     m=open("/etc/hadoop/hdfs-site.xml", "w")
+     m.write("""<?xml version="1.0"?>
+<?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
+
+<!-- Put site-specific property overrides in this file. -->
+
+<configuration>
+
+</configuration>""")
+     m.close()
+     os.system("mkdir /name")
+     m=open("/etc/hadoop/core-site.xml", "w")
+     m.write("""<?xml version="1.0"?>
+<?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
+
+<!-- Put site-specific property overrides in this file. -->
+
+<configuration>
+<property>
+<name>fs.default.name</name>
+<value>hdfs://"""+k+"""</value>
+</property>
+</configuration>""")
+     m.close()
+     os.system("systemctl stop firewalld")
+     os.system("hadoop dfsadmin -report")
+     os.system("hadoop fs -ls /") 
